@@ -1,4 +1,7 @@
-/* one loop */
+/* one loop only
+ * register used here:
+ * temp temp2 counter_1 counter_2 tempMain mask step
+ */
 /* ========== EMULATION PART ========== */
 ldi temp2, (1<<PE4)                     ; turn on the motor
 out PORTE, temp2
@@ -65,7 +68,7 @@ end_travel_loop:
     ldi temp2 (0<<PE4)                   ; turn off the motor
     out PORTE, temp2
     out DDRE, temp2
-    
+
     clr tempMain
 
 stop:
@@ -79,3 +82,29 @@ stop:
     sleep 100
 
     jmp stop
+
+/* ========== EXTRA STEP FOR HASH PRESSING ========== */
+hash_handle:
+    sleep 500
+    ldi temp2, 1
+    cpi currstatus, temp2               ; if currstatus is 1 (running), then it need to stop
+    jmp stop__
+    ldi temp2, 0
+    cpi currstatus, 0                   ; if currstatus is 0 (stop), then it need to run
+    jmp
+
+stop__:
+
+TimerOVF:
+    in timerTemp, SREG
+    push temp                           ; prologue starts
+    push YH                             ; save all conflicting registers in the prologue
+    push YL
+    push r25
+    push r24                            ; prologue ends
+
+    ; load the value of the temporary counter
+    lds r24, TempCounter
+    lds r25, TempCounter+1
+    adiw r25:r24, 1
+    cpi r24, low()
