@@ -8,7 +8,7 @@
 .include "m2560def.inc"
 
 
-/* ===========REGISTER DECLARATIONS=========== */
+/*===========REGISTER DECLARATIONS===========*/
 
 ; Constant Registers
 .def one = r15
@@ -17,11 +17,13 @@
 ; Main Registers
 .def tempMain = r25
 .def tempSec =r24
+.def stationPointer = r23
 .def cursorPos = r22
 .def storagePos = r21
 .def row = r20
 .def col = r19
 .def mask = r18
+.def displayChar = r17
 
 ; Custom Flag Registers
 .def invExpression = r2
@@ -32,7 +34,7 @@
 .def mulRes_h = r1
 
 
-/* ===========VALUE DECLARATIONS=========== */
+/*===========VALUE DECLARATIONS===========*/
 .equ LCD_RS = 7
 .equ LCD_E = 6
 .equ LCD_RW = 5
@@ -42,18 +44,19 @@
 .equ INITROWMASK = 0b00000001
 .equ ROWMASK = 0b00001111
 
-/* ===========DSEG=========== */
+/*===========DSEG===========*/
 
 .dseg
 .org 0x200
+maxStationNum: .byte 1
 stationNames: .byte 100
 travelTimes: .byte 10
 stopTime: .byte 1
 
-ASCIIStorage: .byte 2
+ASCIIStorage: .byte 10
 
 
-/* ===========CSEG=========== */
+/*===========CSEG===========*/
 
 .cseg
 .org 0
@@ -71,7 +74,7 @@ jmp RESET
 .org OVF0addr
 ;jmp Timer0OVF
 
-/* ===========DELAY MACRO=========== */
+/*===========DELAY MACRO===========*/
 
 .macro delay
     push tempMain
@@ -115,7 +118,7 @@ jmp RESET
     pop tempMain
 .endmacro
 
-/* ===========MULTIPLICATION MACRO=========== */
+/*===========MULTIPLICATION MACRO===========*/
 
 .macro multMacro ; max result - 2 bytes
     push r15
@@ -134,7 +137,7 @@ jmp RESET
     pop r15
 .endmacro
 
-/* ===========BLINK MACRO=========== */
+/*===========BLINK MACRO===========*/
 
 blink:
     push tempMain
@@ -153,7 +156,7 @@ blink:
     pop tempMain
 ret
 
-/* ===========QUICK BLINK MACRO=========== */
+/*===========QUICK BLINK MACRO===========*/
 
 quickBlink:
     push tempMain
@@ -184,7 +187,80 @@ quickBlink:
     pop tempMain
 ret
 
-/* ===========PRESET LCD COMMANDS=========== */
+/*===========SPECIAL BLINK MACRO===========*/
+
+specialBlink:
+    push tempMain
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0 ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    ldi tempMain, 0xff ;;;;;;;;;;;;;
+    out PORTC, tempMain
+    delay 30
+    pop tempMain
+ret
+
+/*===========PRESET LCD COMMANDS===========*/
 
 .macro do_lcd_command
     ldi tempMain, @0
@@ -259,14 +335,14 @@ lcd_wait_loop:
     pop tempMain
 ret
 
-/* ===========CLEAR DISPLAY MACRO=========== */
+/*===========CLEAR DISPLAY MACRO===========*/
 
 .macro clearDisplay
     do_lcd_command 0b00000001 ; clear display
     clr cursorPos
 .endmacro
 
-/* ===========DISPLAY UPDATE MACRO=========== */
+/*===========DISPLAY UPDATE MACRO===========*/
 
 .macro updateDisplay
     push r16
@@ -284,7 +360,7 @@ ret
     pop r16
 .endmacro
 
-/* ===========DISPLAY UPDATE WITH ASCII MACRO=========== */
+/*===========DISPLAY UPDATE WITH ASCII MACRO===========*/
 
 .macro updateDisplayWithASCII
     ldi tempMain, 16
@@ -298,7 +374,7 @@ ret
     inc cursorPos
 .endmacro
 
-/* ===========CLEAR ASCII STORAGE MACRO=========== */
+/*===========CLEAR ASCII STORAGE MACRO===========*/
 
 .macro clearASCIIStorage
     ldi xl, low(ASCIIStorage)
@@ -306,11 +382,19 @@ ret
 
     st x+, zero
     st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
+    st x+, zero
 
     clr storagePos
 .endmacro
 
-/* ===========DISPLAY STRING SUBROUTINE=========== */
+/*===========DISPLAY STRING SUBROUTINE===========*/
 
 displayString:
     push r16
@@ -336,7 +420,7 @@ displayString:
     pop r16
 ret
 
-/* ===========MASTER RESET SUBROUTINE=========== */
+/*===========MASTER RESET SUBROUTINE===========*/
 
 RESET:
     ldi tempMain, low(RAMEND)
@@ -361,35 +445,35 @@ RESET:
     do_lcd_command 0b00001000 ; display on
     do_lcd_command 0b00000001 ; clear display
     do_lcd_command 0b00000110 ; increment, no display shift
-    do_lcd_command 0b00001100 ; cursor setting
+    do_lcd_command 0b00001110 ; cursor setting
 
 //********************************
 
     ldi tempMain, PORTLDIR ; columns are outputs, rows are inputs
     STS DDRL, tempMain     ; cannot use out
 
-    ldi tempMain, (0 << CS50)
-    sts TCCR5B, tempMain
+    ldi tempMain, (0 << CS50) 
+    sts TCCR5B, tempMain 
     ldi tempMain, (0 << WGM50)|(0 << COM5A1)
     sts TCCR5A, tempMain
 
 //********************************
     ser tempMain
     out DDRC, tempMain ; PORTC is all ouputs
-    ldi tempMain, 0b11111111
-    out PORTC, tempMain
-    delay 50
-    ldi tempMain, 0b11100111
-    out PORTC, tempMain
-    delay 50
-    ldi tempMain, 0b11000011
-    out PORTC, tempMain
-    delay 50
-    ldi tempMain, 0b10000001
-    out PORTC, tempMain
-    delay 50
-    ldi tempMain, 0b00000000
-    out PORTC, tempMain
+;    ldi tempMain, 0b11111111
+;    out PORTC, tempMain
+;    delay 50
+;    ldi tempMain, 0b11100111
+;    out PORTC, tempMain
+;    delay 50
+;    ldi tempMain, 0b11000011
+;    out PORTC, tempMain
+;    delay 50
+;    ldi tempMain, 0b10000001
+;    out PORTC, tempMain
+;    delay 50
+;    ldi tempMain, 0b00000000
+;    out PORTC, tempMain
 
 //********************************
     testData: .db "1234567890", 0, 0 ; 10 char
@@ -404,6 +488,7 @@ RESET:
     // Phase 4
     iniSStop: .db "The stop time of the monorail at any station is", 0 ; 47 char
     iniFin: .db "Now the configuration is complete. Please wait 5 seconds", 0, 0 ; 56 char
+    iniCharOVF: .db "Name cannot be more than 10 characters, please try again", 0, 0 ; 56 char
 
 //********************************
     clr zero
@@ -413,18 +498,66 @@ RESET:
     clr storagePos
     clr invExpression
     clr OVFOccured
+    clr stationPointer
     clearASCIIStorage
+    ;call specialBlink
 jmp main
 
 
-/* ===========MAIN FUNCTION=========== */
+/*===========MAIN FUNCTION===========*/
 
 main:
 
     call phase1
     phase1Completed:
 
+    clearASCIIStorage
+
+    call phase2
+    phase2Completed:
+
+    clearDisplay
+
+    ldi yl, low(stationNames)
+    ldi yh, high(stationNames)
+
+    ldi tempMain, 0
+    multMacro zero, tempMain, 10
+    add yl, tempMain
+
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, y+
+    updateDisplay tempMain
+    delay 100
+
     endLoop:
+
         ldi tempMain, 0xff ;;;;;;;;;;;;;
         out PORTC, tempMain
         delay 500
@@ -483,7 +616,7 @@ main:
 ;        delay 500
     rjmp endLoop
 
-/* ===========ASK FOR MAX STATION NUMBER SUBROUTINE=========== */
+/*===========PHASE 1 SUBROUTINE===========*/
 
 phase1:
     ldi zl, low(iniSNum<<1)
@@ -494,129 +627,168 @@ phase1:
     updateDisplayWithASCII 32
 
     call valueEnter
-
 ret
 
-/* ===========NUMBER-BASE VALUE ENTERING FUNCTION=========== */
+/*===========PHASE 2 SUBROUTINE===========*/
+
+phase2:
+
+    clr stationPointer
+
+    nameEnterLoop:
+
+        ldi xl, low(maxStationNum) 
+        ldi xh, high(maxStationNum)
+        ld tempMain, x
+
+        cp stationPointer, tempMain
+        brne nameEnterNotComplete
+        jmp nameEnterComplete
+
+        nameEnterNotComplete:
+        ldi zl, low(iniSName<<1)
+        ldi zh, high(iniSName<<1)
+        ldi tempMain, 30
+        call displayString
+        updateDisplayWithASCII 32
+        delay 25
+        ldi tempMain, '1'
+        mov tempSec, stationPointer
+        add tempSec, tempMain
+        updateDisplay tempSec
+        delay 25
+        updateDisplayWithASCII ':'
+        delay 25
+        updateDisplayWithASCII 32
+        
+        call characterEnter
+
+    nameEnterComplete:
+
+    call quickBlink
+    call quickBlink
+jmp phase2Completed
+
+/*===========NUMBER-BASE VALUE ENTERING FUNCTION===========*/
 
 valueEnter:
     ldi mask, INITCOLMASK
     clr col
 
-    colloop:
+    colloopVal:
         STS PORTL, mask
         ldi tempMain, 255
 
-        delayMain:
+        delayMainVal:
             dec tempMain
-            brne delayMain
+            brne delayMainVal
 
-    LDS tempMain, PINL
-    andi tempMain, ROWMASK
+    LDS tempMain, PINL 
+    andi tempMain, ROWMASK 
     cpi tempMain, 0b00001111
-    brne rowNotPushed
-    jmp nextcol
-    rowNotPushed:
+    brne rowNotPushedVal 
+    jmp nextcolVal
+    rowNotPushedVal:
 
     ldi mask, INITROWMASK
-    clr row
+    clr row 
 
-    rowloop:
+    rowloopVal:
         mov tempSec, tempMain
         and tempSec, mask
-        breq isEqual
-        jmp skipconv
-        isEqual:
-        call convert
+        breq isEqualVal
+        jmp skipconvVal
+        isEqualVal:
+        call convertVal 
 
     delay 250
     jmp valueEnter
 ret
 
-/* ===========NUMBER-BASE KEYPAD COMMANDS=========== */
+/*===========NUMBER-BASE KEYPAD COMMANDS===========*/
 
-skipconv:
+skipconvVal:
     inc row
-    lsl mask
-jmp rowloop
+    lsl mask 
+jmp rowloopVal
 
-nextcol:
+nextcolVal:     
     cpi col, 3
-    brne colNotPushed
+    brne colNotPushedVal
     jmp valueEnter
-    colNotPushed:
+    colNotPushedVal:
     sec
     rol mask
     inc col
-jmp colloop
+jmp colloopVal
 
-convert:
+convertVal:
     cpi col, 3
-    breq letters
+    breq lettersVal
     cpi row, 3
-    breq symbols
-    mov tempMain, row
-    lsl tempMain
-    add tempMain, row
-    add tempMain, col
+    breq symbolsVal
+    mov displayChar, row 
+    lsl displayChar
+    add displayChar, row
+    add displayChar, col
     ldi tempSec, 49
-    add tempMain, tempSec
+    add displayChar, tempSec
 
-jmp convert_end
+jmp convert_endVal
 
-letters:
+lettersVal:
     mov tempMain, row
     cpi tempMain, 0
-    breq AChar
+    breq ACharVal
     cpi tempMain, 1
-    breq BChar
+    breq BCharVal
     cpi tempMain, 2
     breq CChar
-    ldi tempMain, 'D'
+    ldi displayChar, 'D'
     clr invExpression
     inc invExpression
-jmp convert_end
+jmp convert_endVal
 
-AChar:
-    ldi tempMain, 'A'
+ACharVal:
+    ldi displayChar, 'A'
     clr invExpression
     inc invExpression
-jmp convert_end
+jmp convert_endVal
 
-BChar:
-    ldi tempMain, 'B'
+BCharVal:
+    ldi displayChar, 'B'
     clr invExpression
     inc invExpression
-jmp convert_end
+jmp convert_endVal
 
 CChar:
 jmp phase1End
 
-symbols:
+symbolsVal:
     cpi col, 0
-    breq star
+    breq starVal
     cpi col, 1
-    breq zeroChar
-    ldi tempMain, '#'
+    breq zeroCharVal
+    ldi displayChar, '#'
     clr invExpression
     inc invExpression
-jmp convert_end
+jmp convert_endVal
 
-star:
-    ldi tempMain, '*'
+starVal:
+    ldi displayChar, '*'
     clr invExpression
     inc invExpression
-jmp convert_end
+jmp convert_endVal
 
-zeroChar:
-    ldi tempMain, '0'
+zeroCharVal:
+    ldi displayChar, '0'
 
-convert_end:
-    updateDisplay tempMain
+convert_endVal:
+    updateDisplay displayChar
     call storeKeyPadVal
 ret
 
-/* ===========NUMBER-BASE STORE KEYPAD VAL=========== */
+/*===========NUMBER-BASE STORE KEYPAD VAL===========*/
 
 storeKeyPadVal:
     ldi xl, low(ASCIIStorage)
@@ -626,19 +798,19 @@ storeKeyPadVal:
 
     add xl, storagePos
 
-    st x+, tempMain
+    st x+, displayChar
 
     inc storagePos
     cpi storagePos, 3
-    brsh charOVF
-    jmp noCharOVF
-    charOVF:
+    brsh charOVFVal
+    jmp noCharOVFVal
+    charOVFVal:
     clr OVFOccured
     inc OVFOccured
-    noCharOVF:
+    noCharOVFVal:
 ret
 
-/* ===========NUMBER-BASE END=========== */
+/*===========NUMBER-BASE END===========*/
 
 phase1End:
     push r16
@@ -646,44 +818,449 @@ phase1End:
     cp OVFOccured, zero
     brne overflowed
     jmp notOverflowed
+
     overflowed:
     jmp displayError
-    notOverflowed:
 
+    notOverflowed:
     cp invExpression, zero
     brne notValid
     jmp notInvalid
+
     notValid:
     jmp displayError
-    notInvalid:
 
-    ldi xl, low(ASCIIStorage)
+    notInvalid:
+    ldi xl, low(ASCIIStorage) 
     ldi xh, high(ASCIIStorage)
 
     cp storagePos, one
     breq sinInt
     jmp notSinInt
+
     sinInt:
-
+    push r16
     ld r16, x+
+    out PORTC, r16
+    subi r16, '0'
+    out PORTC, r16
+    cpi r16, 0
+    brne notZero
+    pop r16
+    jmp displayError
 
+    notZero:
+    out PORTC, r16
+    ldi xl, low(maxStationNum) 
+    ldi xh, high(maxStationNum)
+    st x, r16
+    delay 1000 ;;;;;;;;;;;;
+    pop r16
+    jmp phase1Completed
 
+    notSinInt:
+    cp storagePos, zero
+    breq nothingInSt
+    jmp somethingInSt
 
-    notSinInt
+    nothingInSt:
+    jmp displayError
 
+    somethingInSt:
+    push r16
+    push r17
     ld r16, x+
     ld r17, x+
-
-    ;call quickBlink
-
-    out PORTC, tempMain
-
-    delay 10000
+    cpi r16, '1'
+    breq testFor10
     pop r17
     pop r16
-jmp phase1Completed
+    jmp displayError
 
-/* ===========NUMBER-BASE ERROR SUBROUTINE=========== */
+    testFor10:
+    cpi r17, '0'
+    breq isTen
+    pop r17
+    pop r16
+    jmp displayError
+
+    isTen:
+    ldi xl, low(maxStationNum) 
+    ldi xh, high(maxStationNum)
+    ldi r16, 10
+    st x, r16
+    out PORTC, r16
+    pop r17
+    pop r16
+    delay 1000 ;;;;;;;;;;;;;;;;;;;
+    jmp phase1Completed
+
+/*===========CHARACTER ENTERING FUNCTION===========*/
+
+characterEnter:
+    out PORTC, stationPointer
+    ldi mask, INITCOLMASK
+    clr col
+
+    colloopChar:
+        STS PORTL, mask
+        ldi tempMain, 255
+
+        delayMainChar:
+            dec tempMain
+            brne delayMainChar
+
+    LDS tempMain, PINL 
+    andi tempMain, ROWMASK 
+    cpi tempMain, 0b00001111
+    brne rowNotPushedChar 
+    jmp nextcolChar
+    rowNotPushedChar:
+
+    ldi mask, INITROWMASK
+    clr row 
+
+    rowloopChar:
+        mov tempSec, tempMain
+        and tempSec, mask
+        breq isEqualChar
+        jmp skipconvChar
+        isEqualChar:
+        call convertChar 
+
+    delay 250
+    jmp characterEnter
+ret
+
+/*===========CHARACTER KEYPAD COMMANDS===========*/
+
+skipconvChar:
+    inc row
+    lsl mask 
+jmp rowloopChar
+
+nextcolChar:     
+    cpi col, 3
+    brne colNotPushedChar
+    jmp characterEnter
+    colNotPushedChar:
+    sec
+    rol mask
+    inc col
+jmp colloopChar
+
+convertChar:
+    cpi col, 3
+    breq lettersChar
+    cpi row, 3
+    breq symbolsChar
+    mov displayChar, row 
+    lsl displayChar
+    add displayChar, row
+    add displayChar, col
+    ldi tempSec, 49
+    add displayChar, tempSec
+
+jmp convert_endChar
+
+lettersChar:
+    mov tempMain, row
+    cpi tempMain, 0
+    breq ACharChar
+    cpi tempMain, 1
+    breq BCharChar
+    cpi tempMain, 2
+    breq CCharChar
+    ldi displayChar, 'D'
+    clr invExpression
+    inc invExpression
+jmp convert_endChar
+
+ACharChar:
+    call charSwitch
+jmp convert_endChar
+
+BCharChar:
+    ldi displayChar, 32
+jmp convert_endChar
+
+CCharChar:
+    jmp phase2End
+
+symbolsChar:
+    cpi col, 0
+    breq starChar
+    cpi col, 1
+    breq zeroCharChar
+    ldi displayChar, '#'
+    clr invExpression
+    inc invExpression
+jmp convert_endChar
+
+starChar:
+    ldi displayChar, 'Q'
+jmp convert_endChar
+
+zeroCharChar:
+    ldi displayChar, 'Z'
+
+convert_endChar:
+    call numToChar
+    updateDisplay displayChar
+    call storeKeyPadChar
+ret
+
+;/*===========SRAM DISPLAY===========*/
+;
+;displaySRAM:
+;    ldi xl, low(ASCIIStorage)
+;    ldi xh, high(ASCIIStorage)
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    ld tempMain, x+
+;    updateDisplay tempMain
+;    temploop: jmp temploop
+
+/*===========NUMBER TO CHARACTER CONVERTER===========*/
+
+numToChar:
+    cpi displayChar, '1'
+    brne not1Conv
+    clr invExpression
+    inc invExpression
+    jmp numToCharEnd
+
+    not1Conv:
+    cpi displayChar, '2'
+    brne not2Conv
+    ldi displayChar, 'A'
+    jmp numToCharEnd
+
+    not2Conv:
+    cpi displayChar, '3'
+    brne not3Conv
+    ldi displayChar, 'D'
+    jmp numToCharEnd
+
+    not3Conv:
+    cpi displayChar, '4'
+    brne not4Conv
+    ldi displayChar, 'G'
+    jmp numToCharEnd
+
+    not4Conv:
+    cpi displayChar, '5'
+    brne not5Conv
+    ldi displayChar, 'J'
+    jmp numToCharEnd
+
+    not5Conv:
+    cpi displayChar, '6'
+    brne not6Conv
+    ldi displayChar, 'M'
+    jmp numToCharEnd
+
+    not6Conv:
+    cpi displayChar, '7'
+    brne not7Conv
+    ldi displayChar, 'P'
+    jmp numToCharEnd
+
+    not7Conv:
+    cpi displayChar, '8'
+    brne not8Conv
+    ldi displayChar, 'T'
+    jmp numToCharEnd
+
+    not8Conv:
+    cpi displayChar, '9'
+    brne not9Conv
+    ldi displayChar, 'W'
+    jmp numToCharEnd
+
+    not9Conv:
+
+    numToCharEnd:
+ret
+
+/*===========CHARACTER SWITCHER===========*/
+
+charSwitch:
+    ldi xl, low(ASCIIStorage)
+    ldi xh, high(ASCIIStorage)
+    dec storagePos
+    add xl, storagePos
+
+    ld displayChar, x
+    cpi displayChar, 'Q'
+    brne conSwitch
+    jmp charConvEnd
+    conSwitch:
+    ;updateDisplay displayChar
+    ;call quickBlink
+    inc displayChar
+
+    cpi displayChar, 'D'
+    brne char1Conv
+    ldi displayChar, 'A'
+    jmp charConvEnd
+
+    char1Conv:
+    cpi displayChar, 'G'
+    brne char2Conv
+    ldi displayChar, 'D'
+    jmp charConvEnd
+
+    char2Conv:
+    cpi displayChar, 'J'
+    brne char3Conv
+    ldi displayChar, 'G'
+    jmp charConvEnd
+
+    char3Conv:
+    cpi displayChar, 'M'
+    brne char4Conv
+    ldi displayChar, 'J'
+    jmp charConvEnd
+
+    char4Conv:
+    cpi displayChar, 'P'
+    brne char5Conv
+    ldi displayChar, 'M'
+    jmp charConvEnd
+
+    char5Conv:
+    cpi displayChar, 'T'
+    brne char6Conv
+    ldi displayChar, 'P'
+    jmp charConvEnd
+
+    char6Conv:
+    cpi displayChar, 'W'
+    brne char7Conv
+    ldi displayChar, 'T'
+    jmp charConvEnd
+
+    char7Conv:
+    cpi displayChar, 'Z'
+    brne char8Conv
+    ldi displayChar, 'W'
+    jmp charConvEnd
+
+    char8Conv:
+    cpi displayChar, '['
+    brne char9Conv
+    ldi displayChar, 'Z'
+    jmp charConvEnd
+
+    char9Conv:
+    cpi displayChar, 'Q'
+    brne char10Conv
+    ldi displayChar, 'R'
+    jmp charConvEnd
+
+    char10Conv:
+
+    charConvEnd:
+    st x+, displayChar
+    dec cursorPos
+    do_lcd_command 0b00010000
+ret
+
+/*===========CHARACTER STORE KEYPAD VAL===========*/
+
+storeKeyPadChar:
+    ldi xl, low(ASCIIStorage)
+    ldi xh, high(ASCIIStorage)
+
+    inc storagePos
+    cpi storagePos, 11
+    dec storagePos
+    brsh charOVFChar
+    jmp noCharOVFChar
+
+    charOVFChar:
+    clr OVFOccured
+    inc OVFOccured
+    jmp charOVFError
+
+    noCharOVFChar:
+    add xl, storagePos
+    st x+, tempMain
+    inc storagePos
+
+    ;OVFNoActChar:
+ret
+
+/*===========PHASE 2 END===========*/
+
+phase2End:
+    ldi xl, low(ASCIIStorage)
+    ldi xh, high(ASCIIStorage)
+
+    ldi yl, low(stationNames)
+    ldi yh, high(stationNames)
+
+    mov tempMain, stationPointer
+    multMacro zero, tempMain, 10
+    add yl, tempMain
+
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+    ld tempMain, x+
+    st y+, tempMain
+    updateDisplay tempMain
+    delay 100
+
+    clearASCIIStorage
+    inc stationPointer
+jmp nameEnterLoop
+
+/*===========NUMBER-BASE ERROR SUBROUTINE===========*/
 
 displayError:
     ldi zl, low(errorOcc<<1)
@@ -692,5 +1269,19 @@ displayError:
     call displayString
     clr OVFOccured
     clr invExpression
+    clearASCIIStorage
     call quickBlink
 jmp phase1
+
+/*===========NUMBER-BASE ERROR SUBROUTINE===========*/
+
+charOVFError:
+    ldi zl, low(iniCharOVF<<1)
+    ldi zh, high(iniCharOVF<<1)
+    ldi tempMain, 56
+    call displayString
+    clr OVFOccured
+    clr invExpression
+    clearASCIIStorage
+    call quickBlink
+jmp nameEnterLoop
