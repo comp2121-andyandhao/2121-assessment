@@ -65,8 +65,17 @@ end_travel_loop:
     ldi temp2 (0<<PE4)                   ; turn off the motor
     out PORTE, temp2
     out DDRE, temp2
+    
+    clr tempMain
+
+stop:
+    cp tempMain, mask
+    breq /* next loop */
+    inc tempMain
 
     rcall blink
     rcall blink
     rcall blink
     sleep 100
+
+    jmp stop
