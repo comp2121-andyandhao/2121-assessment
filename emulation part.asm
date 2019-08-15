@@ -23,7 +23,7 @@ clearDisplay
 display_name_loop:
     cpi counter_1, 0                    ; counter_1 will decrease until it reach 0
     breq travel_loop
-    ld temp y+
+    ld temp, y+
     do_lcd_data temp                    ; to display the character "temp"
     dec counter_1
     jmp display_name_loop
