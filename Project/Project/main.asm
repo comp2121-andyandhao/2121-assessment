@@ -8,7 +8,7 @@
 .include "m2560def.inc"
 
 
-/*===========REGISTER DECLARATIONS===========*/
+/* ===========REGISTER DECLARATIONS=========== */
 
 ; Constant Registers
 .def one = r15
@@ -32,7 +32,7 @@
 .def mulRes_h = r1
 
 
-/*===========VALUE DECLARATIONS===========*/
+/* ===========VALUE DECLARATIONS=========== */
 .equ LCD_RS = 7
 .equ LCD_E = 6
 .equ LCD_RW = 5
@@ -42,7 +42,7 @@
 .equ INITROWMASK = 0b00000001
 .equ ROWMASK = 0b00001111
 
-/*===========DSEG===========*/
+/* ===========DSEG=========== */
 
 .dseg
 .org 0x200
@@ -53,7 +53,7 @@ stopTime: .byte 1
 ASCIIStorage: .byte 2
 
 
-/*===========CSEG===========*/
+/* ===========CSEG=========== */
 
 .cseg
 .org 0
@@ -71,7 +71,7 @@ jmp RESET
 .org OVF0addr
 ;jmp Timer0OVF
 
-/*===========DELAY MACRO===========*/
+/* ===========DELAY MACRO=========== */
 
 .macro delay
     push tempMain
@@ -115,7 +115,7 @@ jmp RESET
     pop tempMain
 .endmacro
 
-/*===========MULTIPLICATION MACRO===========*/
+/* ===========MULTIPLICATION MACRO=========== */
 
 .macro multMacro ; max result - 2 bytes
     push r15
@@ -134,7 +134,7 @@ jmp RESET
     pop r15
 .endmacro
 
-/*===========BLINK MACRO===========*/
+/* ===========BLINK MACRO=========== */
 
 blink:
     push tempMain
@@ -153,7 +153,7 @@ blink:
     pop tempMain
 ret
 
-/*===========QUICK BLINK MACRO===========*/
+/* ===========QUICK BLINK MACRO=========== */
 
 quickBlink:
     push tempMain
@@ -184,7 +184,7 @@ quickBlink:
     pop tempMain
 ret
 
-/*===========PRESET LCD COMMANDS===========*/
+/* ===========PRESET LCD COMMANDS=========== */
 
 .macro do_lcd_command
     ldi tempMain, @0
@@ -259,14 +259,14 @@ lcd_wait_loop:
     pop tempMain
 ret
 
-/*===========CLEAR DISPLAY MACRO===========*/
+/* ===========CLEAR DISPLAY MACRO=========== */
 
 .macro clearDisplay
     do_lcd_command 0b00000001 ; clear display
     clr cursorPos
 .endmacro
 
-/*===========DISPLAY UPDATE MACRO===========*/
+/* ===========DISPLAY UPDATE MACRO=========== */
 
 .macro updateDisplay
     push r16
@@ -284,7 +284,7 @@ ret
     pop r16
 .endmacro
 
-/*===========DISPLAY UPDATE WITH ASCII MACRO===========*/
+/* ===========DISPLAY UPDATE WITH ASCII MACRO=========== */
 
 .macro updateDisplayWithASCII
     ldi tempMain, 16
@@ -298,7 +298,7 @@ ret
     inc cursorPos
 .endmacro
 
-/*===========CLEAR ASCII STORAGE MACRO===========*/
+/* ===========CLEAR ASCII STORAGE MACRO=========== */
 
 .macro clearASCIIStorage
     ldi xl, low(ASCIIStorage)
@@ -310,7 +310,7 @@ ret
     clr storagePos
 .endmacro
 
-/*===========DISPLAY STRING SUBROUTINE===========*/
+/* ===========DISPLAY STRING SUBROUTINE=========== */
 
 displayString:
     push r16
@@ -336,7 +336,7 @@ displayString:
     pop r16
 ret
 
-/*===========MASTER RESET SUBROUTINE===========*/
+/* ===========MASTER RESET SUBROUTINE=========== */
 
 RESET:
     ldi tempMain, low(RAMEND)
@@ -417,7 +417,7 @@ RESET:
 jmp main
 
 
-/*===========MAIN FUNCTION===========*/
+/* ===========MAIN FUNCTION=========== */
 
 main:
 
@@ -483,7 +483,7 @@ main:
 ;        delay 500
     rjmp endLoop
 
-/*===========ASK FOR MAX STATION NUMBER SUBROUTINE===========*/
+/* ===========ASK FOR MAX STATION NUMBER SUBROUTINE=========== */
 
 phase1:
     ldi zl, low(iniSNum<<1)
@@ -497,7 +497,7 @@ phase1:
 
 ret
 
-/*===========NUMBER-BASE VALUE ENTERING FUNCTION===========*/
+/* ===========NUMBER-BASE VALUE ENTERING FUNCTION=========== */
 
 valueEnter:
     ldi mask, INITCOLMASK
@@ -533,7 +533,7 @@ valueEnter:
     jmp valueEnter
 ret
 
-/*===========NUMBER-BASE KEYPAD COMMANDS===========*/
+/* ===========NUMBER-BASE KEYPAD COMMANDS=========== */
 
 skipconv:
     inc row
@@ -616,7 +616,7 @@ convert_end:
     call storeKeyPadVal
 ret
 
-/*===========NUMBER-BASE STORE KEYPAD VAL===========*/
+/* ===========NUMBER-BASE STORE KEYPAD VAL=========== */
 
 storeKeyPadVal:
     ldi xl, low(ASCIIStorage)
@@ -638,7 +638,7 @@ storeKeyPadVal:
     noCharOVF:
 ret
 
-/*===========NUMBER-BASE END===========*/
+/* ===========NUMBER-BASE END=========== */
 
 phase1End:
     push r16
@@ -683,7 +683,7 @@ phase1End:
     pop r16
 jmp phase1Completed
 
-/*===========NUMBER-BASE ERROR SUBROUTINE===========*/
+/* ===========NUMBER-BASE ERROR SUBROUTINE=========== */
 
 displayError:
     ldi zl, low(errorOcc<<1)
